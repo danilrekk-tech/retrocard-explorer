@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyzerRouteImport } from './routes/analyzer'
+import { Route as BackupRouteImport } from './routes/backup'
 import { Route as BiosRouteImport } from './routes/bios'
 import { Route as CleanerRouteImport } from './routes/cleaner'
 import { Route as DuplicatesRouteImport } from './routes/duplicates'
@@ -25,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
 const AnalyzerRoute = AnalyzerRouteImport.update({
   id: '/analyzer',
   path: '/analyzer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BackupRoute = BackupRouteImport.update({
+  id: '/backup',
+  path: '/backup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BiosRoute = BiosRouteImport.update({
@@ -56,6 +62,7 @@ const OrganizerRoute = OrganizerRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/backup': typeof BackupRoute
   '/bios': typeof BiosRoute
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/backup': typeof BackupRoute
   '/bios': typeof BiosRoute
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/backup': typeof BackupRoute
   '/bios': typeof BiosRoute
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/analyzer'
+    | '/backup'
     | '/bios'
     | '/cleaner'
     | '/duplicates'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/analyzer'
+    | '/backup'
     | '/bios'
     | '/cleaner'
     | '/duplicates'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/analyzer'
+    | '/backup'
     | '/bios'
     | '/cleaner'
     | '/duplicates'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyzerRoute: typeof AnalyzerRoute
+  BackupRoute: typeof BackupRoute
   BiosRoute: typeof BiosRoute
   CleanerRoute: typeof CleanerRoute
   DuplicatesRoute: typeof DuplicatesRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/analyzer'
       fullPath: '/analyzer'
       preLoaderRoute: typeof AnalyzerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/backup': {
+      id: '/backup'
+      path: '/backup'
+      fullPath: '/backup'
+      preLoaderRoute: typeof BackupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bios': {
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyzerRoute: AnalyzerRoute,
+  BackupRoute: BackupRoute,
   BiosRoute: BiosRoute,
   CleanerRoute: CleanerRoute,
   DuplicatesRoute: DuplicatesRoute,
