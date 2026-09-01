@@ -132,9 +132,3 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
 
   return <RetroCardContext.Provider value={value}>{children}</RetroCardContext.Provider>;
 }
-
-export function useRetroCard(): RetroCardState {
-  const ctx = useContext(RetroCardContext);
-  if (!ctx) throw new Error("useRetroCard должен использоваться внутри RetroCardProvider");
-  return ctx;
-}
