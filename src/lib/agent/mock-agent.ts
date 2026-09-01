@@ -102,7 +102,7 @@ export class MockAgentClient implements LocalAgentClient {
 
   async connect(): Promise<AgentStatus> {
     this.set({ state: "connecting", message: "Поиск локального помощника…" });
-    await sleep(900);
+    await sleep(450);
     this.set({
       state: "connected",
       version: "0.1.0-mock",
@@ -135,7 +135,7 @@ export class MockAgentClient implements LocalAgentClient {
     ];
     for (const [phase, message, percent] of phases) {
       onProgress?.({ phase, message, percent });
-      await sleep(420);
+      await sleep(220);
     }
 
     const durationMs = Date.now() - started;

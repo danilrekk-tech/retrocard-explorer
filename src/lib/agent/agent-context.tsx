@@ -85,6 +85,22 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
 
   const discardPlan = useCallback(() => setPlan(null), []);
 
+  // Демо-режим: карта подключается автоматически, чтобы сервис можно было
+  // открыть и сразу протестировать на демонстрационной SD-карте.
+  useEffect(() => {
+    let cancelled = false;
+    if (agent.getStatus().state !== "disconnected") return;
+    const timer = setTimeout(() => {
+      if (!cancelled) void connect();
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agent]);
+
+
   const refreshBackups = useCallback(async () => {
     setBackups(await agent.listBackups());
   }, [agent]);
