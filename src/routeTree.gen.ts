@@ -18,6 +18,7 @@ import { Route as DuplicatesRouteImport } from './routes/duplicates'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as MigrateRouteImport } from './routes/migrate'
 import { Route as OrganizerRouteImport } from './routes/organizer'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SetupRouteImport } from './routes/setup'
 
 const IndexRoute = IndexRouteImport.update({
@@ -65,6 +66,11 @@ const OrganizerRoute = OrganizerRouteImport.update({
   path: '/organizer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
+  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
+  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
+  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/migrate'
     | '/organizer'
+    | '/settings'
     | '/setup'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/migrate'
     | '/organizer'
+    | '/settings'
     | '/setup'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/migrate'
     | '/organizer'
+    | '/settings'
     | '/setup'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   MigrateRoute: typeof MigrateRoute
   OrganizerRoute: typeof OrganizerRoute
+  SettingsRoute: typeof SettingsRoute
   SetupRoute: typeof SetupRoute
 }
 
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setup': {
       id: '/setup'
       path: '/setup'
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   MigrateRoute: MigrateRoute,
   OrganizerRoute: OrganizerRoute,
+  SettingsRoute: SettingsRoute,
   SetupRoute: SetupRoute,
 }
 export const routeTree = rootRouteImport

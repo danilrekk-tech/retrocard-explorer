@@ -5,14 +5,14 @@ import {
   Label,
   Panel,
   RetroButton,
-  SECTION_NOOP,
+  SEVERITY_LABEL,
+  SEVERITY_TONE,
   SectionTitle,
   StatCard,
   Tag,
 } from "@/components/retro/primitives";
 import { getAgent } from "@/lib/agent";
 import { FIRMWARE_LABELS } from "@/lib/agent/catalog";
-import { SEVERITY_LABEL, SEVERITY_TONE } from "@/components/retro/primitives";
 import type { FirmwareId, MigrationPlan } from "@/lib/agent/types";
 import { cn } from "@/lib/utils";
 
@@ -157,5 +157,3 @@ function MigratePage() {
     </div>
   );
 }
-
-void SECTION_NOOP;
