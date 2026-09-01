@@ -16,6 +16,7 @@ import { Route as BiosRouteImport } from './routes/bios'
 import { Route as CleanerRouteImport } from './routes/cleaner'
 import { Route as DuplicatesRouteImport } from './routes/duplicates'
 import { Route as LibraryRouteImport } from './routes/library'
+import { Route as MigrateRouteImport } from './routes/migrate'
 import { Route as OrganizerRouteImport } from './routes/organizer'
 import { Route as SetupRouteImport } from './routes/setup'
 
@@ -54,6 +55,11 @@ const LibraryRoute = LibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MigrateRoute = MigrateRouteImport.update({
+  id: '/migrate',
+  path: '/migrate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrganizerRoute = OrganizerRouteImport.update({
   id: '/organizer',
   path: '/organizer',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
+  '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
   '/setup': typeof SetupRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
+  '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
   '/setup': typeof SetupRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
+  '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
   '/setup': typeof SetupRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/cleaner'
     | '/duplicates'
     | '/library'
+    | '/migrate'
     | '/organizer'
     | '/setup'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/cleaner'
     | '/duplicates'
     | '/library'
+    | '/migrate'
     | '/organizer'
     | '/setup'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/cleaner'
     | '/duplicates'
     | '/library'
+    | '/migrate'
     | '/organizer'
     | '/setup'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   CleanerRoute: typeof CleanerRoute
   DuplicatesRoute: typeof DuplicatesRoute
   LibraryRoute: typeof LibraryRoute
+  MigrateRoute: typeof MigrateRoute
   OrganizerRoute: typeof OrganizerRoute
   SetupRoute: typeof SetupRoute
 }
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/migrate': {
+      id: '/migrate'
+      path: '/migrate'
+      fullPath: '/migrate'
+      preLoaderRoute: typeof MigrateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/organizer': {
       id: '/organizer'
       path: '/organizer'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   CleanerRoute: CleanerRoute,
   DuplicatesRoute: DuplicatesRoute,
   LibraryRoute: LibraryRoute,
+  MigrateRoute: MigrateRoute,
   OrganizerRoute: OrganizerRoute,
   SetupRoute: SetupRoute,
 }
