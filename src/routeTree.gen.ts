@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyzerRouteImport } from './routes/analyzer'
+import { Route as DuplicatesRouteImport } from './routes/duplicates'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as OrganizerRouteImport } from './routes/organizer'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const AnalyzerRoute = AnalyzerRouteImport.update({
   id: '/analyzer',
   path: '/analyzer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DuplicatesRoute = DuplicatesRouteImport.update({
+  id: '/duplicates',
+  path: '/duplicates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -38,12 +44,14 @@ const OrganizerRoute = OrganizerRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
   '/organizer': typeof OrganizerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
   '/organizer': typeof OrganizerRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
   '/organizer': typeof OrganizerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/analyzer' | '/library' | '/organizer'
+  fullPaths: '/' | '/analyzer' | '/duplicates' | '/library' | '/organizer'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analyzer' | '/library' | '/organizer'
-  id: '__root__' | '/' | '/analyzer' | '/library' | '/organizer'
+  to: '/' | '/analyzer' | '/duplicates' | '/library' | '/organizer'
+  id: '__root__' | '/' | '/analyzer' | '/duplicates' | '/library' | '/organizer'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyzerRoute: typeof AnalyzerRoute
+  DuplicatesRoute: typeof DuplicatesRoute
   LibraryRoute: typeof LibraryRoute
   OrganizerRoute: typeof OrganizerRoute
 }
@@ -83,6 +93,13 @@ declare module '@tanstack/react-router' {
       path: '/analyzer'
       fullPath: '/analyzer'
       preLoaderRoute: typeof AnalyzerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/duplicates': {
+      id: '/duplicates'
+      path: '/duplicates'
+      fullPath: '/duplicates'
+      preLoaderRoute: typeof DuplicatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -105,6 +122,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyzerRoute: AnalyzerRoute,
+  DuplicatesRoute: DuplicatesRoute,
   LibraryRoute: LibraryRoute,
   OrganizerRoute: OrganizerRoute,
 }
