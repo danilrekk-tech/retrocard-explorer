@@ -38,15 +38,13 @@ function LibraryPage() {
   return (
     <RequireScan>
       {(scan) => {
-        const grouped = useMemo(() => {
-          const map = new Map<SystemId, RomEntry[]>();
-          scan.roms.forEach((rom) => {
-            const list = map.get(rom.systemId) ?? [];
-            list.push(rom);
-            map.set(rom.systemId, list);
-          });
-          return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
-        }, [scan.roms]);
+        const map = new Map<SystemId, RomEntry[]>();
+        scan.roms.forEach((rom) => {
+          const list = map.get(rom.systemId) ?? [];
+          list.push(rom);
+          map.set(rom.systemId, list);
+        });
+        const grouped = [...map.entries()].sort((a, b) => b[1].length - a[1].length);
 
         const filtered = scan.roms.filter(
           (r) =>
