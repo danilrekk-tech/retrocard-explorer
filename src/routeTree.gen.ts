@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyzerRouteImport } from './routes/analyzer'
 import { Route as LibraryRouteImport } from './routes/library'
+import { Route as OrganizerRouteImport } from './routes/organizer'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const LibraryRoute = LibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrganizerRoute = OrganizerRouteImport.update({
+  id: '/organizer',
+  path: '/organizer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
   '/library': typeof LibraryRoute
+  '/organizer': typeof OrganizerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
   '/library': typeof LibraryRoute
+  '/organizer': typeof OrganizerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
   '/library': typeof LibraryRoute
+  '/organizer': typeof OrganizerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/analyzer' | '/library'
+  fullPaths: '/' | '/analyzer' | '/library' | '/organizer'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analyzer' | '/library'
-  id: '__root__' | '/' | '/analyzer' | '/library'
+  to: '/' | '/analyzer' | '/library' | '/organizer'
+  id: '__root__' | '/' | '/analyzer' | '/library' | '/organizer'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyzerRoute: typeof AnalyzerRoute
   LibraryRoute: typeof LibraryRoute
+  OrganizerRoute: typeof OrganizerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/organizer': {
+      id: '/organizer'
+      path: '/organizer'
+      fullPath: '/organizer'
+      preLoaderRoute: typeof OrganizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyzerRoute: AnalyzerRoute,
   LibraryRoute: LibraryRoute,
+  OrganizerRoute: OrganizerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
