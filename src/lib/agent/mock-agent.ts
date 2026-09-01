@@ -243,7 +243,7 @@ export class MockAgentClient implements LocalAgentClient {
     const log: string[] = [];
     const total = plan.moves.length || 1;
     for (let i = 0; i < plan.moves.length; i++) {
-      const move = plan.moves[i];
+      const move = plan.moves[i]!;
       log.push(`${move.action.toUpperCase()} ${move.from} → ${move.to}`);
       onProgress?.({
         phase: "apply",
@@ -330,11 +330,11 @@ export class MockAgentClient implements LocalAgentClient {
   async deletePaths(paths: string[], onProgress?: ProgressCallback): Promise<OperationResult> {
     const log: string[] = [];
     for (let i = 0; i < paths.length; i++) {
-      log.push(`DELETE ${paths[i]}`);
+      log.push(`DELETE ${paths[i]!}`);
       onProgress?.({
         phase: "delete",
         percent: Math.round(((i + 1) / Math.max(paths.length, 1)) * 100),
-        message: paths[i],
+        message: paths[i]!,
       });
       await sleep(120);
     }
@@ -349,7 +349,7 @@ export class MockAgentClient implements LocalAgentClient {
   async createBackup(includes: string[], onProgress?: ProgressCallback): Promise<BackupEntry> {
     const steps = ["Подготовка списка файлов…", "Копирование сохранений…", "Копирование BIOS…", "Упаковка архива…", "Проверка контрольных сумм…"];
     for (let i = 0; i < steps.length; i++) {
-      onProgress?.({ phase: "backup", percent: Math.round(((i + 1) / steps.length) * 100), message: steps[i] });
+      onProgress?.({ phase: "backup", percent: Math.round(((i + 1) / steps.length) * 100), message: steps[i]! });
       await sleep(520);
     }
     const entry: BackupEntry = {
@@ -371,7 +371,7 @@ export class MockAgentClient implements LocalAgentClient {
     cardSizeGb: number;
   }): Promise<SetupPlan> {
     await sleep(500);
-    const profile = CONSOLES.find((c) => c.id === input.consoleId) ?? CONSOLES[0];
+    const profile = CONSOLES.find((c) => c.id === input.consoleId) ?? CONSOLES[0]!;
     const romsRoot = input.firmwareId === "stock" ? "/Roms" : profile.romsRoot;
     const folders = [
       { path: romsRoot, depth: 0, note: "Корень библиотеки игр" },
