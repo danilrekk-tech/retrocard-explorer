@@ -11,11 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyzerRouteImport } from './routes/analyzer'
+import { Route as BackupRouteImport } from './routes/backup'
 import { Route as BiosRouteImport } from './routes/bios'
 import { Route as CleanerRouteImport } from './routes/cleaner'
 import { Route as DuplicatesRouteImport } from './routes/duplicates'
 import { Route as LibraryRouteImport } from './routes/library'
+import { Route as MigrateRouteImport } from './routes/migrate'
 import { Route as OrganizerRouteImport } from './routes/organizer'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SetupRouteImport } from './routes/setup'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -25,6 +29,11 @@ const IndexRoute = IndexRouteImport.update({
 const AnalyzerRoute = AnalyzerRouteImport.update({
   id: '/analyzer',
   path: '/analyzer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BackupRoute = BackupRouteImport.update({
+  id: '/backup',
+  path: '/backup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BiosRoute = BiosRouteImport.update({
@@ -47,78 +56,121 @@ const LibraryRoute = LibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MigrateRoute = MigrateRouteImport.update({
+  id: '/migrate',
+  path: '/migrate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrganizerRoute = OrganizerRouteImport.update({
   id: '/organizer',
   path: '/organizer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/backup': typeof BackupRoute
   '/bios': typeof BiosRoute
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
+  '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/backup': typeof BackupRoute
   '/bios': typeof BiosRoute
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
+  '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analyzer': typeof AnalyzerRoute
+  '/backup': typeof BackupRoute
   '/bios': typeof BiosRoute
   '/cleaner': typeof CleanerRoute
   '/duplicates': typeof DuplicatesRoute
   '/library': typeof LibraryRoute
+  '/migrate': typeof MigrateRoute
   '/organizer': typeof OrganizerRoute
+  '/settings': typeof SettingsRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/analyzer'
+    | '/backup'
     | '/bios'
     | '/cleaner'
     | '/duplicates'
     | '/library'
+    | '/migrate'
     | '/organizer'
+    | '/settings'
+    | '/setup'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/analyzer'
+    | '/backup'
     | '/bios'
     | '/cleaner'
     | '/duplicates'
     | '/library'
+    | '/migrate'
     | '/organizer'
+    | '/settings'
+    | '/setup'
   id:
     | '__root__'
     | '/'
     | '/analyzer'
+    | '/backup'
     | '/bios'
     | '/cleaner'
     | '/duplicates'
     | '/library'
+    | '/migrate'
     | '/organizer'
+    | '/settings'
+    | '/setup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyzerRoute: typeof AnalyzerRoute
+  BackupRoute: typeof BackupRoute
   BiosRoute: typeof BiosRoute
   CleanerRoute: typeof CleanerRoute
   DuplicatesRoute: typeof DuplicatesRoute
   LibraryRoute: typeof LibraryRoute
+  MigrateRoute: typeof MigrateRoute
   OrganizerRoute: typeof OrganizerRoute
+  SettingsRoute: typeof SettingsRoute
+  SetupRoute: typeof SetupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -135,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/analyzer'
       fullPath: '/analyzer'
       preLoaderRoute: typeof AnalyzerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/backup': {
+      id: '/backup'
+      path: '/backup'
+      fullPath: '/backup'
+      preLoaderRoute: typeof BackupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bios': {
@@ -165,11 +224,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/migrate': {
+      id: '/migrate'
+      path: '/migrate'
+      fullPath: '/migrate'
+      preLoaderRoute: typeof MigrateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/organizer': {
       id: '/organizer'
       path: '/organizer'
       fullPath: '/organizer'
       preLoaderRoute: typeof OrganizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -178,11 +258,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyzerRoute: AnalyzerRoute,
+  BackupRoute: BackupRoute,
   BiosRoute: BiosRoute,
   CleanerRoute: CleanerRoute,
   DuplicatesRoute: DuplicatesRoute,
   LibraryRoute: LibraryRoute,
+  MigrateRoute: MigrateRoute,
   OrganizerRoute: OrganizerRoute,
+  SettingsRoute: SettingsRoute,
+  SetupRoute: SetupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -95,8 +95,8 @@ export interface RomEntry {
   path: string;
   sizeBytes: number;
   format: string;
-  region?: "USA" | "EUR" | "JPN" | "WORLD" | "UNK";
-  language?: string;
+  region?: "USA" | "EUR" | "JPN" | "WORLD" | "UNK" | undefined;
+  language?: string | undefined;
   hasArtwork: boolean;
   status: ItemStatus;
   problems: string[];
@@ -107,7 +107,7 @@ export interface BiosEntry {
   systemId: SystemId;
   status: "present" | "missing" | "unused";
   required: boolean;
-  sizeBytes?: number;
+  sizeBytes?: number | undefined;
   note: string;
 }
 
@@ -124,11 +124,11 @@ export interface ProblemEntry {
 export interface FolderNode {
   name: string;
   kind: "dir" | "file";
-  sizeBytes?: number;
-  fileCount?: number;
-  systemId?: SystemId;
-  status?: ItemStatus;
-  children?: FolderNode[];
+  sizeBytes?: number | undefined;
+  fileCount?: number | undefined;
+  systemId?: SystemId | undefined;
+  status?: ItemStatus | undefined;
+  children?: FolderNode[] | undefined;
 }
 
 export interface UnknownFile {
@@ -172,7 +172,7 @@ export interface DuplicateGroup {
     fileName: string;
     path: string;
     sizeBytes: number;
-    region?: RomEntry["region"];
+    region?: RomEntry["region"] | undefined;
     label: string;
     recommendedKeep: boolean;
   }>;
@@ -232,7 +232,7 @@ export interface BackupEntry {
 export interface FolderPlanNode {
   path: string;
   depth: number;
-  note?: string;
+  note?: string | undefined;
 }
 
 export interface SetupPlan {
@@ -273,7 +273,7 @@ export interface AgentStatus {
   /** Транспорт: mock | http | websocket. */
   transport: "mock" | "http" | "ws";
   host: string;
-  message?: string;
+  message?: string | undefined;
 }
 
 export interface ProgressEvent {

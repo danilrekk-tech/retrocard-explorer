@@ -87,5 +87,5 @@ export function systemMeta(id: SystemId): SystemMeta {
 }
 
 export function consoleProfile(id: string): ConsoleProfile {
-  return CONSOLES.find((c) => c.id === id) ?? CONSOLES[0];
+  return CONSOLES.find((c) => c.id === id) ?? CONSOLES[0]!;
 }

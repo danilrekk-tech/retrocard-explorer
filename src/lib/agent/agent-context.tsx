@@ -4,17 +4,10 @@
  *
  * UI-компоненты используют только этот хук и не знают о реализации агента.
  */
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { getAgent } from "./index";
+import { RetroCardContext, useRetroCard, type RetroCardState, type Stage } from "./agent-context-core";
 import type {
   AgentStatus,
   BackupEntry,
@@ -24,28 +17,8 @@ import type {
   ScanResult,
 } from "./types";
 
-type Stage = "idle" | "scanning" | "ready" | "organizing" | "complete";
-
-interface RetroCardState {
-  status: AgentStatus;
-  scan: ScanResult | null;
-  plan: OrganizationPlan | null;
-  stage: Stage;
-  progress: ProgressEvent | null;
-  lastResult: OperationResult | null;
-  backups: BackupEntry[];
-  connect: () => Promise<void>;
-  disconnect: () => Promise<void>;
-  scanCard: () => Promise<void>;
-  buildPlan: () => Promise<void>;
-  applyPlan: (plan: OrganizationPlan) => Promise<void>;
-  discardPlan: () => void;
-  refreshBackups: () => Promise<void>;
-  createBackup: (includes: string[]) => Promise<void>;
-  deletePaths: (paths: string[]) => Promise<OperationResult | null>;
-}
-
-const RetroCardContext = createContext<RetroCardState | null>(null);
+export { useRetroCard };
+export type { RetroCardState, Stage };
 
 export function RetroCardProvider({ children }: { children: ReactNode }) {
   const agent = useMemo(() => getAgent(), []);
@@ -158,10 +131,4 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
   };
 
   return <RetroCardContext.Provider value={value}>{children}</RetroCardContext.Provider>;
-}
-
-export function useRetroCard(): RetroCardState {
-  const ctx = useContext(RetroCardContext);
-  if (!ctx) throw new Error("useRetroCard должен использоваться внутри RetroCardProvider");
-  return ctx;
 }
