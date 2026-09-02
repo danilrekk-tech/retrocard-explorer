@@ -5,6 +5,8 @@
  */
 import { createContext, useContext } from "react";
 
+import type { AgentDrive } from "./http-agent";
+import type { AgentMode } from "./mode";
 import type {
   AgentStatus,
   BackupEntry,
@@ -13,6 +15,7 @@ import type {
   ProgressEvent,
   ScanResult,
 } from "./types";
+
 
 export type Stage = "idle" | "scanning" | "ready" | "organizing" | "complete";
 
@@ -24,6 +27,12 @@ export interface RetroCardState {
   progress: ProgressEvent | null;
   lastResult: OperationResult | null;
   backups: BackupEntry[];
+  /** Режим: демо-карта или реальный локальный помощник. */
+  mode: AgentMode;
+  /** Адрес локального помощника (для режима "local"). */
+  agentUrl: string;
+  /** Съёмные носители, найденные помощником. */
+  drives: AgentDrive[];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   scanCard: () => Promise<void>;
@@ -33,7 +42,15 @@ export interface RetroCardState {
   refreshBackups: () => Promise<void>;
   createBackup: (includes: string[]) => Promise<void>;
   deletePaths: (paths: string[]) => Promise<OperationResult | null>;
+  switchMode: (mode: AgentMode) => void;
+  updateAgentUrl: (url: string) => void;
+  /** Проверить доступность помощника без подключения карты. */
+  checkAgent: () => Promise<AgentStatus | null>;
+  refreshDrives: () => Promise<AgentDrive[]>;
+  /** Подключиться к конкретному носителю и просканировать его. */
+  connectDrive: (path: string) => Promise<void>;
 }
+
 
 export const RetroCardContext = createContext<RetroCardState | null>(null);
 
