@@ -71,7 +71,7 @@ function AgentPill() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { scan, progress, status } = useRetroCard();
+  const { scan, progress, status, mode } = useRetroCard();
 
   return (
     <div className="min-h-screen bg-canvas font-body text-ink">
@@ -170,7 +170,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span>Agent · {status.state}</span>
               <span>Transport · {status.transport}</span>
               <span>{scan ? `${scan.summary.romCount} ROM найдено` : "Сканирование не выполнено"}</span>
-              <span>RetroCard · demo data · local agent pending</span>
+              <span>RetroCard · {mode === "local" ? "локальный агент" : "демо-данные"}</span>
             </div>
           </footer>
         </div>
