@@ -78,10 +78,10 @@ function SettingsPage() {
       <Panel title="Источник данных" subtitle="демонстрационная карта или реальная SD-карта на вашем ПК">
         <div className="space-y-3 px-4 py-4">
           <div className="flex flex-wrap gap-2">
-            <RetroButton variant={local ? "outline" : "solid"} onClick={() => switchMode("demo")}>
+            <RetroButton variant={local ? "outline" : "primary"} onClick={() => switchMode("demo")}>
               Демо-карта
             </RetroButton>
-            <RetroButton variant={local ? "solid" : "outline"} onClick={() => switchMode("local")}>
+            <RetroButton variant={local ? "primary" : "outline"} onClick={() => switchMode("local")}>
               RetroCard Local Agent
             </RetroButton>
           </div>
