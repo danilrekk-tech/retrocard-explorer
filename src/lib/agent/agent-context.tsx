@@ -6,7 +6,15 @@
  */
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
-import { getAgent } from "./index";
+import { getAgent, resetAgent } from "./index";
+import { HttpAgentClient, type AgentDrive } from "./http-agent";
+import {
+  getAgentMode,
+  getAgentUrl,
+  setAgentMode,
+  setAgentUrl,
+  type AgentMode,
+} from "./mode";
 import { RetroCardContext, useRetroCard, type RetroCardState, type Stage } from "./agent-context-core";
 import type {
   AgentStatus,
@@ -21,7 +29,18 @@ export { useRetroCard };
 export type { RetroCardState, Stage };
 
 export function RetroCardProvider({ children }: { children: ReactNode }) {
-  const agent = useMemo(() => getAgent(), []);
+  const [mode, setMode] = useState<AgentMode>("demo");
+  const [agentUrl, setUrl] = useState<string>(getAgentUrl());
+  // Меняется при смене режима/адреса, чтобы пересоздать клиента.
+  const [revision, setRevision] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+
+  const agent = useMemo(() => {
+    resetAgent();
+    return getAgent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revision, mode, agentUrl, hydrated]);
+
   const [status, setStatus] = useState<AgentStatus>(() => agent.getStatus());
   const [scan, setScan] = useState<ScanResult | null>(null);
   const [plan, setPlan] = useState<OrganizationPlan | null>(null);
@@ -29,21 +48,42 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<ProgressEvent | null>(null);
   const [lastResult, setLastResult] = useState<OperationResult | null>(null);
   const [backups, setBackups] = useState<BackupEntry[]>([]);
+  const [drives, setDrives] = useState<AgentDrive[]>([]);
 
-  useEffect(() => agent.subscribe(setStatus), [agent]);
+  // Настройки читаем только на клиенте (SSR не имеет localStorage).
+  useEffect(() => {
+    setMode(getAgentMode());
+    setUrl(getAgentUrl());
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    setStatus(agent.getStatus());
+    return agent.subscribe(setStatus);
+  }, [agent]);
 
   const scanCard = useCallback(async () => {
     setStage("scanning");
     setProgress({ phase: "start", percent: 0, message: "Инициализация сканирования…" });
-    const result = await agent.scanCard(setProgress);
-    setScan(result);
-    setStage("ready");
-    setProgress(null);
+    try {
+      const result = await agent.scanCard(setProgress);
+      setScan(result);
+      setStage("ready");
+    } catch (err) {
+      setStage("idle");
+      setStatus({
+        ...agent.getStatus(),
+        state: "error",
+        message: err instanceof Error ? err.message : "Сканирование не удалось",
+      });
+    } finally {
+      setProgress(null);
+    }
   }, [agent]);
 
   const connect = useCallback(async () => {
-    await agent.connect();
-    await scanCard();
+    const next = await agent.connect();
+    if (next.state === "connected") await scanCard();
   }, [agent, scanCard]);
 
   const disconnect = useCallback(async () => {
@@ -68,7 +108,11 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
       setProgress(null);
       setStage("complete");
       setPlan(null);
-      // После применения плана карта пересканируется реальным агентом.
+      if (mode === "local") {
+        // Реальный агент: перечитываем карту после изменений.
+        await scanCard();
+        return;
+      }
       if (scan) {
         setScan({
           ...scan,
@@ -80,7 +124,7 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [agent, scan],
+    [agent, scan, mode, scanCard],
   );
 
   const discardPlan = useCallback(() => setPlan(null), []);
@@ -88,6 +132,7 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
   // Демо-режим: карта подключается автоматически, чтобы сервис можно было
   // открыть и сразу протестировать на демонстрационной SD-карте.
   useEffect(() => {
+    if (!hydrated || mode !== "demo") return;
     let cancelled = false;
     if (agent.getStatus().state !== "disconnected") return;
     const timer = setTimeout(() => {
@@ -98,8 +143,7 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agent]);
-
+  }, [agent, hydrated, mode]);
 
   const refreshBackups = useCallback(async () => {
     setBackups(await agent.listBackups());
@@ -122,9 +166,80 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
       const result = await agent.deletePaths(paths, setProgress);
       setProgress(null);
       setLastResult(result);
+      if (mode === "local") await scanCard();
       return result;
     },
-    [agent],
+    [agent, mode, scanCard],
+  );
+
+  const resetSession = useCallback(() => {
+    setScan(null);
+    setPlan(null);
+    setStage("idle");
+    setLastResult(null);
+    setBackups([]);
+    setDrives([]);
+  }, []);
+
+  const switchMode = useCallback(
+    (next: AgentMode) => {
+      setAgentMode(next);
+      setMode(next);
+      resetSession();
+      setRevision((r) => r + 1);
+    },
+    [resetSession],
+  );
+
+  const updateAgentUrl = useCallback(
+    (url: string) => {
+      setAgentUrl(url);
+      setUrl(getAgentUrl());
+      resetSession();
+      setRevision((r) => r + 1);
+    },
+    [resetSession],
+  );
+
+  const checkAgent = useCallback(async () => {
+    if (!(agent instanceof HttpAgentClient)) return null;
+    try {
+      return await agent.ping();
+    } catch (err) {
+      setStatus({
+        ...agent.getStatus(),
+        state: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : "RetroCard Local Agent не отвечает. Запустите приложение на компьютере.",
+      });
+      return null;
+    }
+  }, [agent]);
+
+  const refreshDrives = useCallback(async () => {
+    if (!(agent instanceof HttpAgentClient)) {
+      setDrives([]);
+      return [];
+    }
+    try {
+      const list = await agent.listDrives();
+      setDrives(list);
+      return list;
+    } catch {
+      setDrives([]);
+      return [];
+    }
+  }, [agent]);
+
+  const connectDrive = useCallback(
+    async (path: string) => {
+      if (!(agent instanceof HttpAgentClient)) return;
+      const next = await agent.connect({ path });
+      if (next.state === "connected") await scanCard();
+    },
+    [agent, scanCard],
   );
 
   const value: RetroCardState = {
@@ -135,6 +250,9 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
     progress,
     lastResult,
     backups,
+    mode,
+    agentUrl,
+    drives,
     connect,
     disconnect,
     scanCard,
@@ -144,6 +262,11 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
     refreshBackups,
     createBackup,
     deletePaths,
+    switchMode,
+    updateAgentUrl,
+    checkAgent,
+    refreshDrives,
+    connectDrive,
   };
 
   return <RetroCardContext.Provider value={value}>{children}</RetroCardContext.Provider>;
