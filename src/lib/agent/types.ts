@@ -8,7 +8,14 @@
  */
 
 /** Идентификатор прошивки. Расширяется по мере поддержки новых ОС. */
-export type FirmwareId = "arkos" | "stock" | "jelos" | "rocknix" | "unknown";
+export type FirmwareId =
+  | "arkos"
+  | "stock"
+  | "jelos"
+  | "rocknix"
+  | "batocera"
+  | "muos"
+  | "unknown";
 
 /** Идентификатор консоли. Сейчас поддержан RG353V, архитектура — на несколько. */
 export type ConsoleId = "rg353v" | "rg35xx" | "rg405m" | "generic";
