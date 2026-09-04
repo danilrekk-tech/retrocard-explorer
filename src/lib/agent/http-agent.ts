@@ -5,7 +5,9 @@
  * Никакой файловой логики в браузере нет: все операции выполняет агент.
  */
 import type {
+  AgentConfig,
   AgentStatus,
+  BrowseResult,
   BackupEntry,
   CleanerFilters,
   CleanerPreview,
@@ -153,7 +155,14 @@ export class HttpAgentClient implements LocalAgentClient {
     return Array.isArray(data) ? data : (data.drives ?? []);
   }
 
-  async connect(options?: { path?: string; consoleId?: ConsoleId }): Promise<AgentStatus> {
+  /** Список папок карты — для выбора папки ROM'ов вручную. */
+  async browse(relativePath = ""): Promise<BrowseResult> {
+    return this.postJson<BrowseResult>("/api/browse", { path: relativePath });
+  }
+
+  async connect(
+    options?: { path?: string; consoleId?: ConsoleId } & Partial<AgentConfig>,
+  ): Promise<AgentStatus> {
     this.setStatus({ ...this.status, state: "connecting", message: "Поиск локального помощника…" });
     try {
       const status = await this.postJson<AgentStatus>("/api/connect", options ?? {});
@@ -195,8 +204,23 @@ export class HttpAgentClient implements LocalAgentClient {
     return this.getJson<ConsoleProfile[]>("/api/consoles");
   }
 
-  scanCard(onProgress?: ProgressCallback): Promise<ScanResult> {
-    return this.streamPost<ScanResult>("/api/scan", {}, onProgress);
+  async scanCard(onProgress?: ProgressCallback, config?: AgentConfig): Promise<ScanResult> {
+    const result = await this.streamPost<ScanResult>("/api/scan", config ?? {}, onProgress);
+    // Совместимость со старой версией помощника, которая игнорирует ручную
+    // прошивку: подставляем выбор пользователя на клиенте.
+    if (config && config.firmwareId !== "auto" && result?.card?.firmware && !result.card.firmware.manual) {
+      result.card = {
+        ...result.card,
+        firmware: {
+          ...result.card.firmware,
+          id: config.firmwareId,
+          manual: true,
+          confidence: 1,
+          evidence: ["Прошивка указана вручную в настройках RetroCard"],
+        },
+      };
+    }
+    return result;
   }
 
   buildOrganizationPlan(scan: ScanResult): Promise<OrganizationPlan> {

@@ -76,6 +76,8 @@ export interface FirmwareInfo {
   /** По каким признакам определена прошивка. */
   evidence: string[];
   confidence: number;
+  /** true, если прошивка указана пользователем вручную. */
+  manual?: boolean | undefined;
 }
 
 export interface SdCardInfo {
@@ -269,6 +271,46 @@ export interface ScanResult {
   tree: FolderNode;
   unknownFiles: UnknownFile[];
   duplicates: DuplicateGroup[];
+  /** Папки, в которых искались ROM'ы (относительно корня карты). */
+  romsRoots?: RomFolderInfo[] | undefined;
+}
+
+/** Папка с ROM'ами, найденная автоматически или указанная вручную. */
+export interface RomFolderInfo {
+  path: string;
+  systemId?: SystemId | null | undefined;
+  manual?: boolean | undefined;
+}
+
+/** Ручная настройка папки с ROM'ами. */
+export interface RomFolderConfig {
+  /** Путь относительно корня карты, например "roms" или "SDCARD/games". */
+  path: string;
+  /** Если задано — все файлы в папке считаются ROM'ами этой системы. */
+  systemId?: SystemId | "auto" | undefined;
+}
+
+/** Ручные настройки чтения карты: прошивка, консоль и папки ROM'ов. */
+export interface AgentConfig {
+  /** "auto" — автоопределение прошивки. */
+  firmwareId: FirmwareId | "auto";
+  consoleId: ConsoleId;
+  romsPaths: RomFolderConfig[];
+}
+
+/** Папка карты для выбора вручную. */
+export interface BrowseEntry {
+  name: string;
+  path: string;
+  fileCount: number;
+}
+
+export interface BrowseResult {
+  root: string;
+  path: string;
+  parent: string | null;
+  dirs: BrowseEntry[];
+  fileCount: number;
 }
 
 export type AgentConnectionState = "disconnected" | "connecting" | "connected" | "error";

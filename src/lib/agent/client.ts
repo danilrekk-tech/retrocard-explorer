@@ -9,6 +9,7 @@
  * менять не потребуется.
  */
 import type {
+  AgentConfig,
   AgentStatus,
   BackupEntry,
   CleanerFilters,
@@ -37,7 +38,7 @@ export interface LocalAgentClient {
   listConsoles(): Promise<ConsoleProfile[]>;
 
   /** Полное сканирование карты с прогрессом. */
-  scanCard(onProgress?: ProgressCallback): Promise<ScanResult>;
+  scanCard(onProgress?: ProgressCallback, config?: AgentConfig): Promise<ScanResult>;
 
   /** Построить план организации файлов (без изменений на карте). */
   buildOrganizationPlan(scan: ScanResult): Promise<OrganizationPlan>;
