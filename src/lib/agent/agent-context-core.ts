@@ -8,7 +8,9 @@ import { createContext, useContext } from "react";
 import type { AgentDrive } from "./http-agent";
 import type { AgentMode } from "./mode";
 import type {
+  AgentConfig,
   AgentStatus,
+  BrowseResult,
   BackupEntry,
   OperationResult,
   OrganizationPlan,
@@ -33,6 +35,8 @@ export interface RetroCardState {
   agentUrl: string;
   /** Съёмные носители, найденные помощником. */
   drives: AgentDrive[];
+  /** Ручные настройки: прошивка, консоль, папки ROM'ов. */
+  config: AgentConfig;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   scanCard: () => Promise<void>;
@@ -49,6 +53,10 @@ export interface RetroCardState {
   refreshDrives: () => Promise<AgentDrive[]>;
   /** Подключиться к конкретному носителю и просканировать его. */
   connectDrive: (path: string) => Promise<void>;
+  /** Обновить ручные настройки (сохраняются между сессиями). */
+  updateConfig: (config: AgentConfig) => void;
+  /** Просмотреть папки карты (для выбора папки ROM'ов вручную). */
+  browse: (path?: string) => Promise<BrowseResult | null>;
 }
 
 
