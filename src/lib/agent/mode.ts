@@ -6,6 +6,7 @@
  * Настройки хранятся в localStorage, чтобы выбор сохранялся между сессиями.
  */
 import { DEFAULT_AGENT_URL } from "./http-agent";
+import type { AgentConfig } from "./types";
 
 export type AgentMode = "demo" | "local";
 
@@ -34,4 +35,35 @@ export function getAgentUrl(): string {
 
 export function setAgentUrl(url: string) {
   storage()?.setItem(URL_KEY, url.trim().replace(/\/$/, "") || DEFAULT_AGENT_URL);
+}
+
+/* --- Ручные настройки чтения карты (прошивка, консоль, папки ROM'ов) --- */
+
+const CONFIG_KEY = "retrocard.agent.config";
+
+export const DEFAULT_AGENT_CONFIG: AgentConfig = {
+  firmwareId: "auto",
+  consoleId: "rg353v",
+  romsPaths: [],
+};
+
+export function getAgentConfig(): AgentConfig {
+  const raw = storage()?.getItem(CONFIG_KEY);
+  if (!raw) return DEFAULT_AGENT_CONFIG;
+  try {
+    const parsed = JSON.parse(raw) as Partial<AgentConfig>;
+    return {
+      firmwareId: parsed.firmwareId ?? "auto",
+      consoleId: parsed.consoleId ?? DEFAULT_AGENT_CONFIG.consoleId,
+      romsPaths: Array.isArray(parsed.romsPaths)
+        ? parsed.romsPaths.filter((p) => p && typeof p.path === "string" && p.path.trim())
+        : [],
+    };
+  } catch {
+    return DEFAULT_AGENT_CONFIG;
+  }
+}
+
+export function setAgentConfig(config: AgentConfig) {
+  storage()?.setItem(CONFIG_KEY, JSON.stringify(config));
 }

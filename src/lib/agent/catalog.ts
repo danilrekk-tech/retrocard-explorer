@@ -27,6 +27,8 @@ export const FIRMWARE_LABELS: Record<FirmwareId, string> = {
   stock: "Stock OS",
   jelos: "JELOS",
   rocknix: "ROCKNIX",
+  batocera: "Batocera",
+  muos: "muOS",
   unknown: "Unknown",
 };
 
