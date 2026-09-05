@@ -31,7 +31,7 @@ export interface LocalAgentClient {
   /** Подписка на изменения состояния соединения. Возвращает функцию отписки. */
   subscribe(listener: (status: AgentStatus) => void): () => void;
 
-  connect(): Promise<AgentStatus>;
+  connect(options?: { path?: string; consoleId?: ConsoleId } & Partial<AgentConfig>): Promise<AgentStatus>;
   disconnect(): Promise<AgentStatus>;
 
   /** Список поддерживаемых консолей. */

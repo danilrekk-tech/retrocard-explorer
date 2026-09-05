@@ -9,15 +9,20 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { getAgent, resetAgent } from "./index";
 import { HttpAgentClient, type AgentDrive } from "./http-agent";
 import {
+  getAgentConfig,
   getAgentMode,
   getAgentUrl,
+  setAgentConfig,
   setAgentMode,
   setAgentUrl,
+  DEFAULT_AGENT_CONFIG,
   type AgentMode,
 } from "./mode";
 import { RetroCardContext, useRetroCard, type RetroCardState, type Stage } from "./agent-context-core";
 import type {
+  AgentConfig,
   AgentStatus,
+  BrowseResult,
   BackupEntry,
   OperationResult,
   OrganizationPlan,
@@ -49,11 +54,13 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
   const [lastResult, setLastResult] = useState<OperationResult | null>(null);
   const [backups, setBackups] = useState<BackupEntry[]>([]);
   const [drives, setDrives] = useState<AgentDrive[]>([]);
+  const [config, setConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
 
   // Настройки читаем только на клиенте (SSR не имеет localStorage).
   useEffect(() => {
     setMode(getAgentMode());
     setUrl(getAgentUrl());
+    setConfig(getAgentConfig());
     setHydrated(true);
   }, []);
 
@@ -66,7 +73,7 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
     setStage("scanning");
     setProgress({ phase: "start", percent: 0, message: "Инициализация сканирования…" });
     try {
-      const result = await agent.scanCard(setProgress);
+      const result = await agent.scanCard(setProgress, config);
       setScan(result);
       setStage("ready");
     } catch (err) {
@@ -79,12 +86,16 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
     } finally {
       setProgress(null);
     }
-  }, [agent]);
+  }, [agent, config]);
 
   const connect = useCallback(async () => {
-    const next = await agent.connect();
+    const next = await agent.connect(
+      mode === "local"
+        ? { consoleId: config.consoleId, firmwareId: config.firmwareId, romsPaths: config.romsPaths }
+        : undefined,
+    );
     if (next.state === "connected") await scanCard();
-  }, [agent, scanCard]);
+  }, [agent, config, mode, scanCard]);
 
   const disconnect = useCallback(async () => {
     await agent.disconnect();
@@ -236,10 +247,32 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
   const connectDrive = useCallback(
     async (path: string) => {
       if (!(agent instanceof HttpAgentClient)) return;
-      const next = await agent.connect({ path });
+      const next = await agent.connect({
+        path,
+        consoleId: config.consoleId,
+        firmwareId: config.firmwareId,
+        romsPaths: config.romsPaths,
+      });
       if (next.state === "connected") await scanCard();
     },
-    [agent, scanCard],
+    [agent, config, scanCard],
+  );
+
+  const updateConfig = useCallback((next: AgentConfig) => {
+    setAgentConfig(next);
+    setConfig(next);
+  }, []);
+
+  const browse = useCallback(
+    async (path = ""): Promise<BrowseResult | null> => {
+      if (!(agent instanceof HttpAgentClient)) return null;
+      try {
+        return await agent.browse(path);
+      } catch {
+        return null;
+      }
+    },
+    [agent],
   );
 
   const value: RetroCardState = {
@@ -253,6 +286,7 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
     mode,
     agentUrl,
     drives,
+    config,
     connect,
     disconnect,
     scanCard,
@@ -267,6 +301,8 @@ export function RetroCardProvider({ children }: { children: ReactNode }) {
     checkAgent,
     refreshDrives,
     connectDrive,
+    updateConfig,
+    browse,
   };
 
   return <RetroCardContext.Provider value={value}>{children}</RetroCardContext.Provider>;
