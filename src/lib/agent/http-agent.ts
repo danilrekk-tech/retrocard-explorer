@@ -161,7 +161,7 @@ export class HttpAgentClient implements LocalAgentClient {
   }
 
   async connect(
-    options?: { path?: string; consoleId?: ConsoleId } & Partial<AgentConfig>,
+    options?: { path?: string } & Partial<AgentConfig>,
   ): Promise<AgentStatus> {
     this.setStatus({ ...this.status, state: "connecting", message: "Поиск локального помощника…" });
     try {

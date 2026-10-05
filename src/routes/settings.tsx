@@ -218,7 +218,7 @@ function SettingsPage() {
                 <Label>Консоль</Label>
                 <select
                   value={config.consoleId}
-                  onChange={(e) => updateConfig({ ...config, consoleId: e.target.value as ConsoleId })}
+                  onChange={(e) => updateConfig({ ...config, consoleId: e.target.value as ConsoleId | "auto" })}
                   className="w-full border border-edge bg-transparent px-3 py-2 font-mono text-[11px] text-ink/80 outline-none focus:border-cyan"
                 >
                   {CONSOLES.map((c) => (
