@@ -18,9 +18,13 @@ function buildOrganizationPlan(rootPath, scan) {
   const foldersToCreate = new Set();
   let totalBytes = 0;
 
+  const firstRoot = (scan.romsRoots || []).find((r) => !r.systemId);
+  const baseDir = firstRoot ? firstRoot.path : "roms";
   for (const rom of scan.roms) {
+    // Папки, которым пользователь назначил платформу, не трогаем.
+    if ((scan.romsRoots || []).some((r) => r.systemId && rom.path.startsWith(r.path + "/"))) continue;
     const meta = catalog.systemMeta(rom.systemId);
-    const expectedDir = path.posix.join("roms", meta.folder);
+    const expectedDir = path.posix.join(baseDir, meta.folder);
     const currentDir = path.posix.dirname(rom.path);
 
     if (rom.systemId === "unknown") {

@@ -35,7 +35,9 @@ const HOST = "127.0.0.1";
 const state = {
   connectionState: "disconnected", // disconnected | connecting | connected | error
   rootPath: null,
-  consoleId: "rg353v",
+  consoleId: "auto",
+  firmwareId: "auto",
+  romsPaths: [],
   lastScan: null,
   message: undefined,
 };
@@ -99,7 +101,9 @@ app.get("/api/drives", (_req, res) => {
 });
 
 app.post("/api/connect", (req, res) => {
-  const { path: requestedPath, consoleId } = req.body || {};
+  const { path: requestedPath, consoleId, firmwareId, romsPaths } = req.body || {};
+  if (firmwareId) state.firmwareId = firmwareId;
+  if (Array.isArray(romsPaths)) state.romsPaths = romsPaths;
   state.connectionState = "connecting";
 
   let targetPath = requestedPath;
@@ -141,9 +145,30 @@ app.get("/api/consoles", (_req, res) => {
 
 // ---- scan ---------------------------------------------------------------
 
-app.post("/api/scan", requireConnected, (_req, res) => {
+app.get("/api/config", (_req, res) => {
+  res.json({ firmwareId: state.firmwareId, consoleId: state.consoleId, romsPaths: state.romsPaths });
+});
+
+app.post("/api/browse", requireConnected, (req, res) => {
+  const rel = String((req.body && req.body.path) || "").replace(/^[\\/]+/, "");
+  const full = path.resolve(state.rootPath, rel);
+  if (!full.startsWith(path.resolve(state.rootPath))) return res.status(400).json({ error: "Путь вне карты" });
+  let entries = [];
+  try { entries = fs.readdirSync(full, { withFileTypes: true }); } catch (e) { return res.status(404).json({ error: "Папка не найдена" }); }
+  const count = (d) => { try { return fs.readdirSync(d).length; } catch { return 0; } };
+  const dirs = entries.filter((e) => e.isDirectory() && !e.name.startsWith("."))
+    .map((e) => ({ name: e.name, path: (rel ? rel + "/" : "") + e.name, fileCount: count(path.join(full, e.name)) }));
+  const relPath = rel.split(path.sep).join("/");
+  res.json({ root: state.rootPath, path: relPath, parent: relPath ? relPath.split("/").slice(0, -1).join("/") : null, dirs, fileCount: entries.filter((e) => e.isFile()).length });
+});
+
+app.post("/api/scan", requireConnected, (req, res) => {
+  const body = req.body || {};
+  if (body.firmwareId) state.firmwareId = body.firmwareId;
+  if (body.consoleId) state.consoleId = body.consoleId;
+  if (Array.isArray(body.romsPaths)) state.romsPaths = body.romsPaths;
   streamOperation(res, (onProgress) => {
-    const result = scanCard(state.rootPath, state.consoleId, onProgress);
+    const result = scanCard(state.rootPath, state.consoleId, onProgress, { firmwareId: state.firmwareId, romsPaths: state.romsPaths });
     state.lastScan = result;
     return result;
   });

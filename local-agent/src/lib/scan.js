@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { detectFirmware, findRomsRoot, findBiosRoot, findSavesRoot } = require("./firmware");
+const { detectFirmware, findRomsRoot, findRomsRoots, resolveRomsPaths, detectConsole, findBiosRoot, findSavesRoot } = require("./firmware");
 const { getVolumeInfo } = require("./drives");
 const catalog = require("./catalog");
 
@@ -150,118 +150,40 @@ function buildRomEntryFromFile(full, dir, entry, ext, systemId) {
   };
 }
 
-function collectRoms(romsRoot, unknownFiles) {
+function collectRomsFromRoot(rootPath, root, unknownFiles, forcedSystemId, seen) {
   const roms = [];
-  if (!romsRoot || !fs.existsSync(romsRoot)) return roms;
-
-  const topEntries = fs.readdirSync(romsRoot, { withFileTypes: true });
-  const systemFolders = topEntries.filter((e) => e.isDirectory());
-
-  // Файлы, лежащие прямо в корне /roms (не разложенные по папкам систем) —
-  // классифицируем по расширению и помечаем как требующие перемещения.
-  for (const entry of topEntries) {
-    if (entry.isDirectory()) continue;
-    const ext = path.extname(entry.name).toLowerCase();
-    if (IMAGE_EXT.has(ext) || METADATA_EXT.has(ext)) continue;
-    const full = path.join(romsRoot, entry.name);
-    const systemId = catalog.systemIdByExtension(ext);
-    if (!systemId) {
-      let st;
-      try {
-        st = fs.statSync(full);
-      } catch {
-        st = { size: 0 };
+  if (!root || !fs.existsSync(root)) return roms;
+  const walk = (dir, hint) => {
+    let entries = [];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      if (entry.name.startsWith(".")) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (ART_DIR_NAMES.has(entry.name.toLowerCase())) continue;
+        walk(full, catalog.systemIdByFolder(entry.name) || hint);
+        continue;
       }
-      unknownFiles.push({
-        path: "roms/" + entry.name,
-        sizeBytes: st.size,
-        reason: "Неопознанное расширение файла прямо в корне /roms",
-      });
-      continue;
+      if (seen.has(full)) continue;
+      seen.add(full);
+      const ext = path.extname(entry.name).toLowerCase();
+      if (IMAGE_EXT.has(ext) || METADATA_EXT.has(ext)) continue;
+      const systemId = forcedSystemId || hint || catalog.systemIdByExtension(ext);
+      if (!systemId || (!forcedSystemId && !hint && !KNOWN_ROM_EXT.has(ext))) {
+        let st; try { st = fs.statSync(full); } catch { st = { size: 0 }; }
+        unknownFiles.push({ path: relPosix(rootPath, full), sizeBytes: st.size, reason: "Неопознанное расширение файла в папке с играми" });
+        continue;
+      }
+      const rom = buildRomEntryFromFile(full, dir, entry, ext, systemId);
+      if (rom) { rom.path = relPosix(rootPath, full); delete rom._fullPath; roms.push(rom); }
     }
-    const rom = buildRomEntryFromFile(full, romsRoot, entry, ext, systemId);
-    if (rom) {
-      rom.path = "roms/" + entry.name;
-      delete rom._fullPath;
-      roms.push(rom);
-    }
-  }
-
-  for (const sysDir of systemFolders) {
-    const folderSystemId = catalog.systemIdByFolder(sysDir.name);
-    const sysPath = path.join(romsRoot, sysDir.name);
-
-    const walkFiles = (dir) => {
-      let entries = [];
-      try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
-      } catch {
-        return;
-      }
-      for (const entry of entries) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          if (ART_DIR_NAMES.has(entry.name.toLowerCase())) continue; // это папки артворка, не роскладка систем
-          walkFiles(full);
-          continue;
-        }
-        const ext = path.extname(entry.name).toLowerCase();
-        if (IMAGE_EXT.has(ext) || METADATA_EXT.has(ext)) continue; // метаданные/артворк — не ROM
-
-        const isKnownExt = KNOWN_ROM_EXT.has(ext);
-        const systemId = folderSystemId || catalog.systemIdByExtension(ext);
-
-        if (!systemId || (!folderSystemId && !isKnownExt)) {
-          let st;
-          try {
-            st = fs.statSync(full);
-          } catch {
-            st = { size: 0 };
-          }
-          unknownFiles.push({
-            path: relPosix(romsRoot, full).replace(/^/, "roms/"),
-            sizeBytes: st.size,
-            reason: "Неопознанное расширение файла в папке ROM'ов",
-          });
-          continue;
-        }
-
-        let st;
-        try {
-          st = fs.statSync(full);
-        } catch {
-          continue;
-        }
-        const baseName = path.basename(entry.name, ext);
-        const { title, region, language } = parseTitleTags(baseName);
-        const problems = [];
-        let status = "ok";
-        if (st.size === 0) {
-          status = "error";
-          problems.push("Файл имеет нулевой размер (повреждён)");
-        }
-
-        roms.push({
-          id: toId(full),
-          title,
-          systemId: systemId,
-          fileName: entry.name,
-          path: "roms/" + relPosix(romsRoot, full),
-          sizeBytes: st.size,
-          format: ext.replace(".", "").toUpperCase(),
-          region,
-          language,
-          hasArtwork: hasArtworkFor(dir, baseName),
-          status,
-          problems,
-        });
-      }
-    };
-
-    walkFiles(sysPath);
-  }
-
+  };
+  walk(root, catalog.systemIdByFolder(path.basename(root)) || null);
   return roms;
+}
+
+function collectRoms(romsRoot, unknownFiles) {
+  return collectRomsFromRoot(romsRoot ? path.dirname(romsRoot) : "", romsRoot, unknownFiles, null, new Set());
 }
 
 function collectBios(biosRoot, consoleId) {
@@ -526,7 +448,7 @@ function measureSpeed(rootPath) {
   }
 }
 
-function scanCard(rootPath, consoleId, onProgress) {
+function scanCard(rootPath, consoleIdIn, onProgress, options = {}) {
   const emit = (percent, phase, message) => onProgress && onProgress({ phase, percent, message });
   const startedAt = Date.now();
 
@@ -534,9 +456,19 @@ function scanCard(rootPath, consoleId, onProgress) {
   const volume = getVolumeInfo(rootPath);
 
   emit(8, "firmware", "Определение прошивки");
-  const firmware = detectFirmware(rootPath);
+  const firmware = detectFirmware(rootPath, options.firmwareId);
+  let consoleId = consoleIdIn;
+  let consoleDetection = null;
+  if (!consoleId || consoleId === "auto") {
+    consoleDetection = detectConsole(rootPath, firmware.id);
+    consoleId = consoleDetection.id;
+  }
 
-  const romsRoot = findRomsRoot(rootPath);
+  const manual = resolveRomsPaths(rootPath, options.romsPaths);
+  const roots = manual.length
+    ? manual.map((m) => ({ full: m.full, systemId: m.systemId, manual: true }))
+    : findRomsRoots(rootPath).map((full) => ({ full, systemId: null, manual: false }));
+  const romsRoot = roots[0] ? roots[0].full : findRomsRoot(rootPath);
   const biosRoot = findBiosRoot(rootPath);
   const savesRoot = findSavesRoot(rootPath);
 
@@ -545,7 +477,10 @@ function scanCard(rootPath, consoleId, onProgress) {
 
   emit(40, "roms", "Поиск ROM'ов и каталогизация");
   const unknownFiles = [];
-  const roms = collectRoms(romsRoot, unknownFiles);
+  const seen = new Set();
+  const roms = [];
+  for (const r of roots) roms.push(...collectRomsFromRoot(rootPath, r.full, unknownFiles, r.systemId, seen));
+  const romsRoots = roots.map((r) => ({ path: relPosix(rootPath, r.full) || ".", systemId: r.systemId, manual: r.manual }));
 
   emit(62, "bios", "Проверка BIOS");
   const bios = collectBios(biosRoot, consoleId);
@@ -586,6 +521,7 @@ function scanCard(rootPath, consoleId, onProgress) {
     usedBytes: volume.usedBytes,
     freeBytes: volume.freeBytes,
     consoleId,
+    consoleDetection,
     firmware,
     health: computeHealth(problems),
     readSpeedMbs: speed.readSpeedMbs,
@@ -593,7 +529,7 @@ function scanCard(rootPath, consoleId, onProgress) {
   };
 
   emit(100, "done", "Сканирование завершено");
-  return { card, summary, roms, bios, saves, problems, tree, unknownFiles, duplicates };
+  return { card, summary, roms, bios, saves, problems, tree, unknownFiles, duplicates, romsRoots };
 }
 
 module.exports = { scanCard, buildTree, collectRoms, collectBios, collectSaves, findDuplicates };

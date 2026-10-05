@@ -1,6 +1,6 @@
 {
   "name": "retrocard-local-agent",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "RetroCard Local Agent — локальный помощник для RetroCard Explorer. Даёт веб-интерфейсу доступ к настоящей microSD-карте на компьютере пользователя через локальный HTTP-сервер.",
   "private": true,
   "main": "src/server.js",
