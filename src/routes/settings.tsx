@@ -218,9 +218,10 @@ function SettingsPage() {
                 <Label>Консоль</Label>
                 <select
                   value={config.consoleId}
-                  onChange={(e) => updateConfig({ ...config, consoleId: e.target.value as ConsoleId })}
+                  onChange={(e) => updateConfig({ ...config, consoleId: e.target.value as ConsoleId | "auto" })}
                   className="w-full border border-edge bg-transparent px-3 py-2 font-mono text-[11px] text-ink/80 outline-none focus:border-cyan"
                 >
+                  <option value="auto">Автоопределение</option>
                   {CONSOLES.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.vendor} {c.name}

@@ -43,7 +43,7 @@ const CONFIG_KEY = "retrocard.agent.config";
 
 export const DEFAULT_AGENT_CONFIG: AgentConfig = {
   firmwareId: "auto",
-  consoleId: "rg353v",
+  consoleId: "auto",
   romsPaths: [],
 };
 

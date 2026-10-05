@@ -89,6 +89,8 @@ export interface SdCardInfo {
   usedBytes: number;
   freeBytes: number;
   consoleId: ConsoleId;
+  /** Как была определена консоль (если автоопределение). */
+  consoleDetection?: { id: ConsoleId; evidence: string[] } | null | undefined;
   firmware: FirmwareInfo;
   health: HealthStatus;
   readSpeedMbs: number;
@@ -294,7 +296,8 @@ export interface RomFolderConfig {
 export interface AgentConfig {
   /** "auto" — автоопределение прошивки. */
   firmwareId: FirmwareId | "auto";
-  consoleId: ConsoleId;
+  /** "auto" — автоопределение консоли. */
+  consoleId: ConsoleId | "auto";
   romsPaths: RomFolderConfig[];
 }
 
