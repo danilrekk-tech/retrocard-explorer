@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { GameInfoDialog } from "@/components/retro/GameInfoDialog";
 import { RequireScan } from "@/components/retro/RequireScan";
 import {
   Label,
@@ -14,6 +15,32 @@ import { systemMeta } from "@/lib/agent/catalog";
 import type { RomEntry, SystemId } from "@/lib/agent/types";
 import { formatBytes, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+function download(name: string, content: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportRoms(roms: RomEntry[], format: "csv" | "txt" | "json") {
+  const date = new Date().toISOString().slice(0, 10);
+  if (format === "json") {
+    download(`retrocard-games-${date}.json`, JSON.stringify(roms.map((r) => ({ title: r.title, system: systemMeta(r.systemId).name, file: r.fileName, path: r.path, sizeBytes: r.sizeBytes, region: r.region })), null, 2), "application/json");
+  } else if (format === "csv") {
+    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const rows = [["Игра", "Система", "Файл", "Путь", "Размер", "Регион"].join(";"), ...roms.map((r) => [r.title, systemMeta(r.systemId).name, r.fileName, r.path, formatBytes(r.sizeBytes), r.region ?? ""].map(esc).join(";"))];
+    download(`retrocard-games-${date}.csv`, "\uFEFF" + rows.join("\r\n"), "text/csv;charset=utf-8");
+  } else {
+    const bySys = new Map<string, string[]>();
+    roms.forEach((r) => { const k = systemMeta(r.systemId).name; bySys.set(k, [...(bySys.get(k) ?? []), r.title]); });
+    const text = [...bySys.entries()].map(([k, v]) => `== ${k} (${v.length}) ==\n${v.sort().join("\n")}`).join("\n\n");
+    download(`retrocard-games-${date}.txt`, text, "text/plain;charset=utf-8");
+  }
+}
 
 export const Route = createFileRoute("/library")({
   head: () => ({
@@ -34,6 +61,7 @@ export const Route = createFileRoute("/library")({
 function LibraryPage() {
   const [active, setActive] = useState<SystemId | "all">("all");
   const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<RomEntry | null>(null);
 
   return (
     <RequireScan>
@@ -60,6 +88,17 @@ function LibraryPage() {
             <SectionTitle hint={`${formatNumber(scan.roms.length)} игр · ${grouped.length} систем`}>
               ROM <span className="text-magenta">LIBRARY</span>
             </SectionTitle>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-ink/40">Скачать список:</span>
+              {(["csv", "txt", "json"] as const).map((f) => (
+                <button key={f} onClick={() => exportRoms(filtered, f)} className="rounded-lg border border-amber/40 bg-amber/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-amber hover:bg-amber/20">
+                  {f}
+                </button>
+              ))}
+              <span className="font-mono text-[10px] text-ink/30">Нажмите на игру, чтобы увидеть скриншоты и описание</span>
+            </div>
+            <GameInfoDialog rom={selected} onClose={() => setSelected(null)} />
 
             {/* Системы */}
             <div className="flex flex-wrap gap-2">
@@ -113,7 +152,7 @@ function LibraryPage() {
                   </thead>
                   <tbody>
                     {filtered.map((rom) => (
-                      <tr key={rom.id} className="border-b border-edge/60 transition-colors hover:bg-panel-2">
+                      <tr key={rom.id} onClick={() => setSelected(rom)} className="cursor-pointer border-b border-edge/60 transition-colors hover:bg-panel-2">
                         <td className="px-4 py-2.5">
                           <p className="max-w-[220px] truncate text-sm text-ink">{rom.title}</p>
                           {rom.problems.length > 0 && (
