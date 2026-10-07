@@ -87,7 +87,7 @@ const CONSOLES = [
     vendor: "Другое",
     firmwares: ["arkos", "jelos", "rocknix", "unknown"],
     romsRoot: "/roms",
-    systems: ["nes", "snes", "gb", "gbc", "gba", "megadrive", "n64", "psx", "psp", "arcade"],
+    systems: Object.keys(SYSTEMS).filter((k) => k !== "unknown"),
   },
 ];
 
@@ -111,38 +111,65 @@ function consoleProfile(id) {
   return CONSOLES.find((c) => c.id === id) || CONSOLES[0];
 }
 
-/** Найти systemId по имени папки (регистронезависимо). */
-function systemIdByFolder(folderName) {
-  const lower = String(folderName).toLowerCase();
-  for (const key of Object.keys(SYSTEMS)) {
-    if (SYSTEMS[key].folder.toLowerCase() === lower) return key;
-  }
-  // популярные синонимы папок, которые встречаются у разных прошивок
-  const aliases = {
-    gamegear: "mastersystem",
-    gg: "mastersystem",
-    md: "megadrive",
-    genesis: "genesis",
-    "sega32x": "megadrive",
-    segacd: "megadrive",
-    ps1: "psx",
-    psone: "psx",
-    fba: "arcade",
-    mame: "arcade",
-    fbneo: "arcade",
-    ngp: "unknown",
-    dreamcast: "unknown",
-  };
-  return aliases[lower] || null;
+/** Синонимы папок, которые используют разные прошивки (ArkOS, muOS, Batocera, ROCKNIX, Onion, MinUI, Stock). */
+const FOLDER_ALIASES = {
+  famicom: "nes", fc: "nes", nintendo: "nes", fds: "nes",
+  sfc: "snes", superfamicom: "snes", "super nintendo": "snes", snes9x: "snes",
+  gameboy: "gb", "game boy": "gb", dmg: "gb",
+  gameboycolor: "gbc", "game boy color": "gbc",
+  gameboyadvance: "gba", "game boy advance": "gba", agb: "gba",
+  md: "megadrive", "mega drive": "megadrive", sega: "megadrive", smd: "megadrive", megadrivejp: "megadrive",
+  gen: "genesis",
+  sms: "mastersystem", "master system": "mastersystem", ms: "mastersystem", mark3: "mastersystem",
+  gg: "gamegear", "game gear": "gamegear",
+  "32x": "sega32x", s32x: "sega32x",
+  scd: "segacd", megacd: "segacd", "mega cd": "segacd", "mega-cd": "segacd",
+  ss: "saturn", segasaturn: "saturn",
+  dc: "dreamcast",
+  ps: "psx", ps1: "psx", psone: "psx", playstation: "psx", "sony playstation": "psx",
+  "playstation portable": "psp", ppsspp: "psp",
+  n64dd: "n64", "nintendo 64": "n64",
+  ds: "nds", "nintendo ds": "nds",
+  vb: "virtualboy", "virtual boy": "virtualboy",
+  pm: "pokemini", "pokemon mini": "pokemini",
+  fba: "arcade", fbneo: "arcade", fbalpha: "arcade", mame: "arcade", mame2003: "arcade", "mame2003-plus": "arcade", mame2010: "arcade", cps1: "arcade", cps2: "arcade", cps3: "arcade", arcadia: "arcade", "arcade games": "arcade",
+  neo: "neogeo", "neo geo": "neogeo", "neo-geo": "neogeo", aes: "neogeo", mvs: "neogeo",
+  ngpc: "ngpc", "neo geo pocket color": "ngpc", "neo geo pocket": "ngp",
+  pce: "pcengine", tg16: "pcengine", turbografx: "pcengine", "turbografx-16": "pcengine", tg: "pcengine", pcenginecd: "pcenginecd", pcecd: "pcenginecd", tgcd: "pcenginecd", "turbografx-cd": "pcenginecd",
+  ws: "wonderswan", wsc: "wonderswancolor",
+  a26: "atari2600", "atari 2600": "atari2600", a78: "atari7800", lynx: "lynx", atarilynx: "lynx",
+  msx1: "msx", msx2: "msx",
+  commodore: "c64", commodore64: "c64", amiga500: "amiga", amiga1200: "amiga", amigacd32: "amiga",
+  coleco: "colecovision", intv: "intellivision", vectrex: "vectrex", "3do": "threedo", threedo: "threedo",
+  pc: "dos", msdos: "dos", "ms-dos": "dos", dosbox: "dos",
+};
+
+function normalizeFolderName(name) {
+  return String(name).toLowerCase().replace(/\s*[\(\[].*?[\)\]]\s*/g, " ").replace(/[_]+/g, " ").trim();
 }
 
-/** Найти systemId по расширению файла. */
+/** Найти systemId по имени папки (регистронезависимо, с синонимами). */
+function systemIdByFolder(folderName) {
+  const lower = normalizeFolderName(folderName);
+  const compact = lower.replace(/[\s.-]+/g, "");
+  for (const key of Object.keys(SYSTEMS)) {
+    if (key === "unknown") continue;
+    const f = SYSTEMS[key].folder.toLowerCase();
+    if (f === lower || f === compact || key === lower || key === compact) return key;
+    if (SYSTEMS[key].name.toLowerCase() === lower) return key;
+  }
+  return FOLDER_ALIASES[lower] || FOLDER_ALIASES[compact] || null;
+}
+
+/** Найти systemId по расширению: сперва уникальные расширения, потом общие. */
 function systemIdByExtension(ext) {
   const lower = ext.toLowerCase();
-  for (const key of Object.keys(SYSTEMS)) {
-    if (SYSTEMS[key].extensions.includes(lower)) return key;
-  }
-  return null;
+  const owners = Object.keys(SYSTEMS).filter((k) => SYSTEMS[k].extensions.includes(lower));
+  if (owners.length === 1) return owners[0];
+  if (owners.length === 0) return null;
+  // неоднозначные (.zip, .bin, .chd, .cue) — классический приоритет
+  const pref = { ".bin": "megadrive", ".zip": "arcade", ".7z": "arcade", ".chd": "psx", ".cue": "psx", ".iso": "psp", ".img": "psx" };
+  return pref[lower] || owners[0];
 }
 
 module.exports = {
