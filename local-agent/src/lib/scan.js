@@ -61,7 +61,8 @@ function cleanTitle(raw) {
 
 /** Если файл назван «Disc 1.bin»/«EBOOT.PBP» — берём название папки игры. */
 function titleWithFolder(title, dir) {
-  if (title && !GENERIC_NAME.test(title) && !/^\d+$/.test(title)) return title;
+  const abbrev = title && !/\s/.test(title) && title.length <= 5;
+  if (title && !abbrev && !GENERIC_NAME.test(title) && !/^\d+$/.test(title)) return title;
   const folder = path.basename(dir);
   if (catalog.systemIdByFolder(folder)) return title;
   const fromFolder = cleanTitle(folder);
