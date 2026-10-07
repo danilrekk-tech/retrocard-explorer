@@ -45,7 +45,7 @@ export const TOP_GAMES: Partial<Record<SystemId, string[]>> = {
   threedo: ["Gex", "Road Rash", "Star Control II", "The Need for Speed", "Return Fire", "Wing Commander III"],
   pcenginecd: ["Castlevania: Rondo of Blood", "Ys Book I & II", "Gate of Thunder", "Lords of Thunder", "Dracula X"],
 };
-TOP_GAMES.genesis = TOP_GAMES.megadrive;
+TOP_GAMES.genesis = TOP_GAMES.megadrive ?? [];
 
 export interface TopInfo {
   rank: number;
