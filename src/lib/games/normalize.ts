@@ -71,5 +71,5 @@ export function similarity(a: string, b: string): number {
   const numsA = ka.filter((t) => /^\d+$/.test(t)).join();
   const numsB = kb.filter((t) => /^\d+$/.test(t)).join();
   const numPenalty = numsA !== numsB ? 0.25 : 0;
-  return Math.max(0, Math.max(jac, cover * 0.85) - numPenalty);
+  return Math.max(0, Math.max(jac, cover * (small.size >= 2 ? 0.85 : 0.6)) - numPenalty);
 }
