@@ -41,9 +41,38 @@ function parseTitleTags(fileNameNoExt) {
       if (re.test(tag)) region = code;
     }
   }
-  const title = fileNameNoExt.replace(/\s*[\(\[][^\)\]]*[\)\]]/g, "").trim();
+  const title = cleanTitle(fileNameNoExt);
   const language = tags.find((t) => /^(en|fr|de|es|it|ja|ru|multi\d*)$/i.test(t));
   return { title: title || fileNameNoExt, region: region || "UNK", language, tags };
+}
+
+const GENERIC_NAME = /^(disc|disk|cd|track|game|rom|image|eboot|boot|main|start|default)[\s_\-.]*\d*$/i;
+
+/** Чистое название: без тегов, нумерации «001 - », версий, подчёркиваний. */
+function cleanTitle(raw) {
+  let s = String(raw).replace(/_+/g, " ");
+  if (!/\s/.test(s) && /\./.test(s)) s = s.replace(/\./g, " ");
+  s = s.replace(/\s*[\(\[\{][^\)\]\}]*[\)\]\}]/g, " ");
+  s = s.replace(/^\s*\d{1,4}\s*[-.)_]\s+/, "");
+  s = s.replace(/\b(v\d+(\.\d+)*|rev\s*[a-z0-9]+|disc\s*\d+|cd\s*\d+)\b/gi, " ");
+  s = s.replace(/^(.*), (The|A|An)$/i, "$2 $1");
+  return s.replace(/\s{2,}/g, " ").replace(/\s+-\s*$/, "").trim();
+}
+
+/** Если файл назван «Disc 1.bin»/«EBOOT.PBP» — берём название папки игры. */
+function titleWithFolder(title, dir) {
+  if (title && !GENERIC_NAME.test(title) && !/^\d+$/.test(title)) return title;
+  const folder = path.basename(dir);
+  if (catalog.systemIdByFolder(folder)) return title;
+  const fromFolder = cleanTitle(folder);
+  return fromFolder && !GENERIC_NAME.test(fromFolder) ? fromFolder : title;
+}
+
+/** Многофайловые игры: показываем .m3u/.cue/.gdi, а не каждую дорожку. */
+function isSecondaryTrack(ext, dirExts) {
+  if ([".bin", ".img", ".iso", ".raw", ".sub", ".ccd"].includes(ext) && (dirExts.has(".cue") || dirExts.has(".gdi") || dirExts.has(".ccd") && ext !== ".ccd")) return true;
+  if ([".cue", ".chd", ".gdi", ".ccd", ".pbp", ".cdi"].includes(ext) && dirExts.has(".m3u")) return true;
+  return false;
 }
 
 function normalizeForGrouping(title) {
@@ -126,7 +155,9 @@ function buildRomEntryFromFile(full, dir, entry, ext, systemId) {
     return null;
   }
   const baseName = path.basename(entry.name, ext);
-  const { title, region, language } = parseTitleTags(baseName);
+  const parsed = parseTitleTags(baseName);
+  const { region, language } = parsed;
+  const title = titleWithFolder(parsed.title, dir);
   const problems = [];
   let status = "ok";
   if (st.size === 0) {
@@ -156,6 +187,7 @@ function collectRomsFromRoot(rootPath, root, unknownFiles, forcedSystemId, seen)
   const walk = (dir, hint) => {
     let entries = [];
     try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    const dirExts = new Set(entries.filter((e) => !e.isDirectory()).map((e) => path.extname(e.name).toLowerCase()));
     for (const entry of entries) {
       if (entry.name.startsWith(".")) continue;
       const full = path.join(dir, entry.name);
@@ -168,6 +200,7 @@ function collectRomsFromRoot(rootPath, root, unknownFiles, forcedSystemId, seen)
       seen.add(full);
       const ext = path.extname(entry.name).toLowerCase();
       if (IMAGE_EXT.has(ext) || METADATA_EXT.has(ext)) continue;
+      if (isSecondaryTrack(ext, dirExts)) continue;
       const systemId = forcedSystemId || hint || catalog.systemIdByExtension(ext);
       if (!systemId || (!forcedSystemId && !hint && !KNOWN_ROM_EXT.has(ext))) {
         let st; try { st = fs.statSync(full); } catch { st = { size: 0 }; }
