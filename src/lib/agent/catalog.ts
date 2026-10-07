@@ -13,7 +13,7 @@ export const SYSTEMS: Record<SystemId, SystemMeta> = {
   megadrive: { id: "megadrive", short: "MD", name: "Sega Mega Drive", folder: "megadrive", extensions: [".md", ".bin", ".gen", ".zip"], requiresBios: false, accent: "cyan" },
   genesis: { id: "genesis", short: "GEN", name: "Sega Genesis", folder: "genesis", extensions: [".gen", ".bin", ".zip"], requiresBios: false, accent: "amber" },
   n64: { id: "n64", short: "N64", name: "Nintendo 64", folder: "n64", extensions: [".n64", ".z64", ".v64", ".zip"], requiresBios: false, accent: "leaf" },
-  psx: { id: "psx", short: "PSX", name: "Sony PlayStation", folder: "psx", extensions: [".bin", ".cue", ".chd", ".pbp", ".img"], requiresBios: true, accent: "coral" },
+  psx: { id: "psx", short: "PSX", name: "Sony PlayStation", folder: "psx", extensions: [".bin", ".cue", ".chd", ".pbp", ".img", ".m3u"], requiresBios: true, accent: "coral" },
   psp: { id: "psp", short: "PSP", name: "Sony PSP", folder: "psp", extensions: [".iso", ".cso"], requiresBios: false, accent: "magenta" },
   arcade: { id: "arcade", short: "ARC", name: "Arcade (FBNeo / MAME)", folder: "arcade", extensions: [".zip", ".7z"], requiresBios: true, accent: "amber" },
   mastersystem: { id: "mastersystem", short: "SMS", name: "Sega Master System", folder: "mastersystem", extensions: [".sms", ".zip"], requiresBios: false, accent: "cyan" },
